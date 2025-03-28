@@ -102,7 +102,11 @@ export function InfoSidebar(props) {
         </p>
       </div>
       <div className="box help-desc-box">
-        <p>联系我们：{process.env.REACT_APP_CONTACT_EMAIL}</p>
+        <p>联系我们：<br />
+          {process.env.REACT_APP_CONTACT_EMAIL}<br />
+          {process.env.REACT_APP_CONTACT_GROUP}<br />
+          如果你觉得{process.env.REACT_APP_TITLE}不好，你就去建设它。
+        </p>
       </div>
       <div className="box help-desc-box">
         <p>
@@ -123,11 +127,19 @@ export function InfoSidebar(props) {
         <p>
           {process.env.REACT_APP_TITLE} 网页版的诞生离不开&nbsp;
           <a
-            href="https://github.com/pkuhelper-web/webhole"
+            href="https://github.com/xmcp/webhole"
             target="_blank"
             rel="noopener"
           >
             P大树洞网页版 by @xmcp
+          </a>
+          、
+          <a
+            href="https://github.com/treehollow/webhole"
+            target="_blank"
+            rel="noopener"
+          >
+            T大树洞网页版 by @thuhole
           </a>
           、
           <a href="https://reactjs.org/" target="_blank" rel="noopener">
@@ -137,13 +149,12 @@ export function InfoSidebar(props) {
           <a href="https://icomoon.io/#icons" target="_blank" rel="noopener">
             IcoMoon
           </a>
-          &nbsp;等开源项目
+          &nbsp;等开源项目，我们诚挚感谢！
         </p>
         <p>
           This program is free software: you can redistribute it and/or modify
           it under the terms of the GNU General Public License as published by
-          the Free Software Foundation, either version 3 of the License, or (at
-          your option) any later version.
+          the Free Software Foundation, version 3 of the License.
         </p>
         <p>
           This program is distributed in the hope that it will be useful, but
@@ -222,7 +233,7 @@ export class LoginForm extends Component {
                       查看系统消息
                     </a>
                     <br />
-                    当您发送的内容违规时，我们将用系统消息提示您
+                    当您登录树洞或发送的内容违规，我们将用系统消息提示您
                   </p>
                   {/*<p>*/}
                   {/*  <a onClick={this.copy_token.bind(this, token.value)}>*/}
@@ -246,7 +257,12 @@ export class LoginForm extends Component {
                       <p>
                         <small>
                           {process.env.REACT_APP_TITLE}
-                          面向T大学生，通过T大邮箱验证您的身份并提供服务。
+                          面向{process.env.REACT_APP_COLLEGE_NICKNAME}学生，
+                          通过{process.env.REACT_APP_COLLEGE_NICKNAME}邮箱验证您的身份并提供服务。
+                          <br />
+                          {process.env.REACT_APP_TITLE} may not be an official hollow.
+                          <br />
+                          使用{process.env.REACT_APP_TITLE}时，还需遵守当地法律法规。
                         </small>
                       </p>
                     </div>

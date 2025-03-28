@@ -12,7 +12,7 @@ import {
   GoogleReCaptcha,
 } from 'react-google-recaptcha-v3';
 
-const LOGIN_POPUP_ANCHOR_ID = 'pkuhelper_login_popup_anchor';
+const LOGIN_POPUP_ANCHOR_ID = 'treehollow_login_popup_anchor';
 
 class UnregisterPopupSelf extends Component {
   constructor(props) {
@@ -201,13 +201,17 @@ class UnregisterPopupSelf extends Component {
                 </p>
                 <p>
                   <label>
-                    邮箱验证码&nbsp;
-                    <input
-                      ref={this.ref.email_verification}
-                      type="tel"
-                      autoFocus={true}
-                    />
+                    邮件内容
                   </label>
+                </p>
+                <p>
+                  <textarea
+                    ref={this.ref.email_verification}
+                    autoFocus={true}
+                    placeholder={`请给自己的邮箱发一封邮件，下载这封邮件，用记事本打开它\n支持的发件人：${process.env.REACT_APP_TRUSTED_FROM_DOMAINS}`}
+                    rows="8"
+                    style={{ width: '100%', resize: 'vertical' }}
+                  ></textarea>
                 </p>
                 <p>
                   Nonce：&nbsp;
@@ -216,7 +220,7 @@ class UnregisterPopupSelf extends Component {
                   </label>
                 </p>
                 <p>
-                  注：Nonce是注册树洞时欢迎邮件中的“找回密码口令”，形如xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx。
+                  注：Nonce是注册树洞时欢迎邮件中的“找回密码口令”，形如12345678-90ab-cdef-9876-543210fedcba。
                 </p>
                 <p>
                   <label>

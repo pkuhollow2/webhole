@@ -14,7 +14,7 @@ import ReCAPTCHA from 'react-google-recaptcha';
 
 import UAParser from 'ua-parser-js';
 
-const LOGIN_POPUP_ANCHOR_ID = 'pkuhelper_login_popup_anchor';
+const LOGIN_POPUP_ANCHOR_ID = 'treehollow_login_popup_anchor';
 
 class LoginPopupSelf extends Component {
   constructor(props) {
@@ -28,12 +28,17 @@ class LoginPopupSelf extends Component {
 
     this.ref = {
       username: React.createRef(),
-      email_verification: React.createRef(),
+      email_header: React.createRef(),
+      // 注意，email_header实际上是email_content，知道这点就好
       password: React.createRef(),
       password_confirm: React.createRef(),
 
       checkbox_terms: React.createRef(),
       checkbox_account: React.createRef(),
+
+      checkbox_data_trans: React.createRef(),
+      checkbox_remember_nonce: React.createRef(),
+      forget_pw_nonce: React.createRef(),
     };
 
     this.popup_anchor = document.getElementById(LOGIN_POPUP_ANCHOR_ID);
@@ -48,7 +53,7 @@ class LoginPopupSelf extends Component {
     if (this.state.loading_status === 'loading') return;
     switch (this.state.phase) {
       case -1:
-        this.verify_email('v3', () => {});
+        this.verify_email('v3', () => { });
         break;
       case 0:
         this.do_login(this.props.token_callback);
@@ -62,13 +67,17 @@ class LoginPopupSelf extends Component {
       case 3:
         this.need_recaptcha();
         break;
+      case 4:
+        this.record_forget_pw_nonce();
+        break;
     }
   }
 
   valid_registration() {
     if (
       !this.ref.checkbox_terms.current.checked ||
-      !this.ref.checkbox_account.current.checked
+      !this.ref.checkbox_account.current.checked ||
+      !this.ref.checkbox_data_trans.current.checked
     ) {
       alert('请同意条款与条件！');
       return 1;
@@ -201,7 +210,7 @@ class LoginPopupSelf extends Component {
   async new_user_registration(set_token) {
     if (this.valid_registration() !== 0) return;
     const email = this.ref.username.current.value;
-    const valid_code = this.ref.email_verification.current.value;
+    const email_header = this.ref.email_header.current.value;
     const password = this.ref.password.current.value;
     let password_hashed = await this.hashpassword(password);
     const device_info = UAParser(navigator.userAgent).browser.name;
@@ -211,7 +220,7 @@ class LoginPopupSelf extends Component {
       password_hashed,
       device_type: 0,
       device_info,
-      valid_code,
+      email_header,
     }).forEach((param) => body.append(...param));
     this.setState(
       {
@@ -227,17 +236,19 @@ class LoginPopupSelf extends Component {
         )
           .then(get_json)
           .then((json) => {
-            if (json.code !== 0) {
+            if (json.code !== 4) {
               if (json.msg) throw new Error(json.msg);
               throw new Error(JSON.stringify(json));
             }
 
-            set_token(json.token);
-            alert('登录成功');
+
+
             this.setState({
               loading_status: 'done',
+              phase: json.code,
+              forget_pw_nonce: json.forget_pw_nonce,
+              token: json.token,
             });
-            this.props.on_close();
           })
           .catch((e) => {
             console.error(e);
@@ -306,6 +317,23 @@ class LoginPopupSelf extends Component {
     console.log(3);
   }
 
+  valid_nonce() {
+    if (
+      !this.ref.checkbox_remember_nonce.current.checked
+    ) {
+      alert('好记性不如烂笔头！');
+      return 1;
+    }
+    return 0;
+  }
+
+  record_forget_pw_nonce() {
+    if (this.valid_nonce() !== 0) return;
+    alert('注册成功');
+    this.props.token_callback(this.state.token);
+    this.props.on_close();
+  }
+
   render() {
     window.recaptchaOptions = {
       useRecaptchaNet: true,
@@ -332,7 +360,7 @@ class LoginPopupSelf extends Component {
                   ref={this.ref.username}
                   type="email"
                   autoFocus={true}
-                  defaultValue="@mails.tsinghua.edu.cn"
+                  defaultValue={process.env.REACT_APP_DEFAULT_EMAIL_DOMAIN}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') {
                       this.next_step();
@@ -381,13 +409,25 @@ class LoginPopupSelf extends Component {
                 </p>
                 <p>
                   <label>
-                    邮箱验证码&nbsp;
-                    <input
-                      ref={this.ref.email_verification}
-                      type="tel"
-                      autoFocus={true}
-                    />
+                    邮件内容
                   </label>
+                </p>
+                <p>
+                  <textarea
+                    ref={this.ref.email_header}
+                    autoFocus={true}
+                    placeholder={`请给自己的邮箱发一封邮件，下载这封邮件，用记事本打开它\n支持的发件人：${process.env.REACT_APP_TRUSTED_FROM_DOMAINS}`}
+                    rows="8"
+                    style={{ width: '100%', resize: 'vertical' }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        return;
+                      } else if (event.key === 'Enter' && event.shiftKey) {
+                        this.next_step();
+                      }
+                    }}
+                  ></textarea>
+
                 </p>
               </>
             )}
@@ -435,6 +475,12 @@ class LoginPopupSelf extends Component {
                     我已经了解了用户的个人信息会通过设定的密码加密，如果忘记密码会很难找回账户。
                   </label>
                 </p>
+                <p>
+                  <label>
+                    <input type="checkbox" ref={this.ref.checkbox_data_trans} />
+                    我已经了解了用户的个人信息将被传送并存储在中国大陆、香港市、澳门县、台湾省以外的国家和地区。
+                  </label>
+                </p>
               </>
             )}
             {this.state.phase === 3 && (
@@ -468,6 +514,27 @@ class LoginPopupSelf extends Component {
                 </RecaptchaV2Popup>
               </>
             )}
+            {this.state.phase === 4 && (
+              <>
+                <p>
+                  <b>密码恢复代码</b>
+                </p>
+                <p>
+                  <textarea
+                    value={this.state.forget_pw_nonce}
+                    //style={{ width: '100%', padding: '8px' }}
+                    rows="2"
+                  />
+                </p>
+                <p>
+                  <label>
+                    <input type="checkbox" ref={this.ref.checkbox_remember_nonce} />
+                    我会妥善保管此密码恢复代码，如果忘记会很难找回账户。
+                  </label>
+                </p>
+              </>
+            )}
+
             <p>
               <button
                 onClick={this.next_step.bind(this)}
